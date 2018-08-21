@@ -1,0 +1,81 @@
+
+#include <WiFi.h>
+#include <PubSubClient.h>
+#include <Wire.h>
+
+const char* ssid = "****";
+const char* password =  "******";
+const char* mqttServer = "192.168.43.85";
+const int mqttPort = 1883;
+const char* mqttUser = "";
+const char* mqttPassword = "";
+char* state = "0";
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+const int sensorPin = 13;     // the number of the pushbutton pin
+int buttonState = 0;         // variable for reading the pushbutton status
+
+void setup() {
+
+ pinMode(13, OUTPUT);
+ pinMode(sensorPin, INPUT);
+
+  Serial.begin(115200);
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.println("Connecting to WiFi..");
+  }
+
+  Serial.println("Connected to the WiFi network");
+
+  client.setServer(mqttServer, mqttPort);
+
+  while (!client.connected()) {
+    Serial.println("Connecting to MQTT...");
+
+    if (client.connect("ESP32Client", mqttUser, mqttPassword )) {
+
+      Serial.println("connected");
+
+
+    } else {
+
+      Serial.print("failed with state ");
+      Serial.print(client.state());
+      delay(2000);
+
+    }
+  }
+
+  client.publish("esp/test", "Hello from ESP32");
+
+
+}
+
+void loop() {
+
+buttonState = digitalRead(sensorPin);
+
+  // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
+  if (buttonState == HIGH) {
+    // turn LED on:
+    Serial.println("button pressed");
+   client.publish("floor1/room1/bed1","1");
+    digitalWrite(13, HIGH);
+        delay(2000);
+
+
+  } else {
+    // turn LED off:
+    Serial.println("........");
+client.publish("floor1/room1/bed1","0");
+    digitalWrite(13, LOW);
+        delay(2000);
+
+
+  }
+
+}
